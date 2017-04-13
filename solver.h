@@ -71,10 +71,10 @@ template <typename InitialFn,
           position.
           primitive: Test if the game is over.
           */
-             InitialFn initial_position __attribute__((const));
-             GenerateFn generate_moves __attribute__((const));
-             DoMoveFn do_move __attribute__((const));
-             PrimitiveFn primitive __attribute__((const));
+             InitialFn initial_position;
+             GenerateFn generate_moves;
+             DoMoveFn do_move;
+             PrimitiveFn primitive;
          };
 
 template <typename Game, typename Position>

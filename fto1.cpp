@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <functional>
 #include "solver.h"
 
 class FourToOne : public Game<std::function<int()>,
