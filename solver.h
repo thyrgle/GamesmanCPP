@@ -85,7 +85,7 @@ std::tuple<Status, int> solve_pos(Game & game, Position position) {
       */
     // If the position can be trivial solved, we are done.
     if (game.primitive(position) != UNDECIDED) {
-        return game.primitive(position);
+        return std::make_tuple(game.primitive(position), 0);
     }
     // Otherwise we must recurse downward!
     std::vector<Status> children_statuses;
