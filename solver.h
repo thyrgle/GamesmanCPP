@@ -2,6 +2,9 @@
 #include <string>
 #include <algorithm>
 #include <tuple>
+#include <queue>
+#include <map>
+#include <functional>
 
 enum Status {
     /**
@@ -30,11 +33,11 @@ Status reduce_statuses(Statuses const & children) {
       player can go down it. If there is no losing position then
       the current player must lose.
       */
-    auto tie = find(children.begin(), children.end(), TIE);
+    auto tie = find(std::begin(children), std::end(children), TIE);
     if (tie != children.end()) return TIE;
     //Check if there is a loss in the children.
-    auto loss = find(children.begin(), children.end(), LOSS);
-    if (loss != children.end()) return WIN;
+    auto loss = find(std::begin(children), std::end(children), LOSS);
+    if (loss != std::end(children)) return WIN;
     return LOSS;
 }
 
@@ -44,6 +47,14 @@ int calculate_remoteness(Status parent_state, Remotes children) {
       Given the status of the parent node, calculate the remoteness given
       an iterable of the statuses of the children nodes.
       */
+    switch (parent_state) {
+        case WIN:
+        case LOSS:
+        case TIE:
+        case UNDECIDED:
+        default:
+            break;
+    }
     return 0;
 }
 
@@ -78,29 +89,43 @@ template <typename InitialFn,
          };
 
 template <typename Game, typename Position>
-std::tuple<Status, int> solve_pos(Game & game, Position position) {
+void solve_pos(Game &game, Position position) {
     /**
       Solve a game at a particular position.
       (Assume it is from P1's perspective)
       */
-    // If the position can be trivial solved, we are done.
-    if (game.primitive(position) != UNDECIDED) {
-        return std::make_tuple(game.primitive(position), 0);
-    }
     // Otherwise we must recurse downward!
-    std::vector<Status> children_statuses;
     auto const moves = game.generate_moves(position);
-    std::transform(std::begin(moves), std::end(moves),
-            std::back_inserter(children_statuses),
-            [=](auto const & move) {
-            return std::get<0>(solve_pos(game,
-                        game.do_move(position, move)));
-            });
-    return std::make_pair(reduce_statuses(children_statuses), 0);
+    std::queue<std::tuple<Position, Position>> children;
+    for (auto const move: moves) {
+        children.push(std::make_tuple(game.do_move(position, move), position));
+    }
+    std::map<Position, Status> results;
+    std::map<Position, int> remotes;
+    // Perform breadth first search on children
+    while (!children.empty()) {
+        // Really a child, parent tuple because you may need to update the parent.
+        auto const child = children.front();
+        children.pop();
+        if (game.primitive(std::get<0>(child)) != UNDECIDED) {
+            // Check if the child can be trivially solved.
+            results[std::get<0>(child)] = game.primitive(std::get<0>(child));
+            results[std::get<1>(child)] = results[std::get<0>(child)];
+        } else if (results.find(std::get<0>(child)) == std::end(results)) {
+            // Found in results, no more computation needed.
+            results[std::get<1>(child)] = results[std::get<0>(child)];
+        } else {
+            // Otherwie continue the search.
+            auto const moves = game.generate_moves(std::get<0>(child));
+            for (auto const move: moves) {
+                children.push(std::make_tuple(game.do_move(std::get<0>(child), move), std::get<0>(child)));
+            }
+        }
+    }
 }
 
 template <typename Game>
-std::tuple<Status, int> solve(Game& game) {
+void solve(Game& game) {
     /**
       Determine whether it is a WIN, LOSS, or TIE for P1.
       */

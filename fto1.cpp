@@ -82,6 +82,6 @@ int main() {
       Launches the game FourToOne and then sovles it.
       */
     FourToOne game = FourToOne();
-    std::cout << to_string(std::get<0>(solve(game)));
+    solve(game);
     return 0;
 }
