@@ -94,7 +94,6 @@ void solve_pos(Game &game, Position position) {
       Solve a game at a particular position.
       (Assume it is from P1's perspective)
       */
-    // Otherwise we must recurse downward!
     auto const moves = game.generate_moves(position);
     std::queue<std::tuple<Position, Position>> children;
     for (auto const move: moves) {
